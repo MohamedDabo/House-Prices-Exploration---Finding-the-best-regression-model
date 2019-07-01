@@ -3169,1295 +3169,427 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "It's now time to look for potential relationships between SalePrice and categorical variables."
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "Since we are working with categorical variables, we can't use spearman's rank correlation.\n",
-    "Instead we will perform an ANOVA test on a combination of each categorical variable along with the SalePrice variable.\n",
-    "Since there 45 categorical variables we will have to filter which variables to use the test on.\n",
-    "A simple strategy is to pick variables with less than 7 possible outcomes."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 60,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "There are 31 variables with less than 7 possible outcomes:['MSZoning', 'Street', 'Alley', 'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope', 'BldgType', 'RoofStyle', 'MasVnrType', 'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond', 'BsmtExposure', 'Heating', 'HeatingQC', 'CentralAir', 'Electrical', 'KitchenQual', 'FireplaceQu', 'GarageFinish', 'GarageQual', 'GarageCond', 'PavedDrive', 'PoolQC', 'Fence', 'MiscFeature', 'SaleCondition']\n"
-     ]
-    }
-   ],
-   "source": [
-    "var = []\n",
-    "for column in train_df.select_dtypes(exclude=['number']).columns:\n",
-    "    if len(train_df[column].unique()) < 7:\n",
-    "        var.append(column)\n",
+    "It's now time to look for potential relationships between SalePrice and categorical variables.\n",
     "\n",
-    "print(\"There are \" + str(len(var)) + \" variables with less than 7 possible outcomes:\" + str(var))"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "So for the ANOVA test, we will follow the following steps:\n",
-    "- list all possible outcomes for the categorical variable\n",
-    "- perform ANOVA test\n",
-    "- decide if the results are significant enough to reject the null hypothesis which is \"the SalePrice doesn't have a significant effect on the categorical variable\"\n",
-    "\n",
-    "All results of the ANOVA tests will be stored in a dictionary object.\n",
-    "\n",
-    "Let's start with **MSZoning** which identifies the general zoning classification of the sale"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 63,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "RL\n",
-      "RM\n",
-      "FV\n",
-      "RH\n",
-      "C (all)\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Initializing dictionary object\n",
-    "anova_results = {}\n",
-    "\n",
-    "# Listing all possible outcomes\n",
-    "for value in train_df['MSZoning'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 66,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['MSZoning'] == \"RL\"]['SalePrice'],\n",
-    "                train_df[train_df['MSZoning'] == \"RM\"]['SalePrice'],\n",
-    "                train_df[train_df['MSZoning'] == \"FV\"]['SalePrice'],\n",
-    "                train_df[train_df['MSZoning'] == \"RH\"]['SalePrice'],\n",
-    "                train_df[train_df['MSZoning'] == \"C (all)\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['MSZoning'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Street**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 70,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Pave\n",
-      "Grvl\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['Street'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 71,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['Street'] == \"Pave\"]['SalePrice'],\n",
-    "                train_df[train_df['Street'] == \"Grvl\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['Street'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Alley**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 74,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "None\n",
-      "Grvl\n",
-      "Pave\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['Alley'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 75,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['Alley'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['Alley'] == \"Grvl\"]['SalePrice'],\n",
-    "                train_df[train_df['Alley'] == \"Pave\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['Alley'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**LotShape**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 79,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Reg\n",
-      "IR1\n",
-      "IR2\n",
-      "IR3\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['LotShape'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 80,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['LotShape'] == \"Reg\"]['SalePrice'],\n",
-    "                train_df[train_df['LotShape'] == \"IR1\"]['SalePrice'],\n",
-    "                train_df[train_df['LotShape'] == \"IR2\"]['SalePrice'],\n",
-    "                train_df[train_df['LotShape'] == \"IR3\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['LotShape'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**LandContour**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 84,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Lvl\n",
-      "Bnk\n",
-      "HLS\n",
-      "Low\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['LandContour'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 85,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['LandContour'] == \"Lvl\"]['SalePrice'],\n",
-    "                train_df[train_df['LandContour'] == \"Bnk\"]['SalePrice'],\n",
-    "                train_df[train_df['LandContour'] == \"HLS\"]['SalePrice'],\n",
-    "                train_df[train_df['LandContour'] == \"Low\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['LandContour'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Utilities**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 95,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "AllPub\n",
-      "NoSeWa\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['Utilities'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 97,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['Utilities'] == \"AllPub\"]['SalePrice'],\n",
-    "                train_df[train_df['Utilities'] == \"NoSeWa\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['Utilities'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**LotConfig**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 100,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Inside\n",
-      "FR2\n",
-      "Corner\n",
-      "CulDSac\n",
-      "FR3\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['LotConfig'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 101,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['LotConfig'] == \"Inside\"]['SalePrice'],\n",
-    "                train_df[train_df['LotConfig'] == \"FR2\"]['SalePrice'],\n",
-    "                train_df[train_df['LotConfig'] == \"Corner\"]['SalePrice'],\n",
-    "                train_df[train_df['LotConfig'] == \"CulDSac\"]['SalePrice'],\n",
-    "                train_df[train_df['LotConfig'] == \"FR3\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['LotConfig'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**LandSlope**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 104,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Gtl\n",
-      "Mod\n",
-      "Sev\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['LandSlope'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 105,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['LandSlope'] == \"Gtl\"]['SalePrice'],\n",
-    "                train_df[train_df['LandSlope'] == \"Mod\"]['SalePrice'],\n",
-    "                train_df[train_df['LandSlope'] == \"Sev\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['LandSlope'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**BldgType**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 109,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "1Fam\n",
-      "2fmCon\n",
-      "Duplex\n",
-      "TwnhsE\n",
-      "Twnhs\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['BldgType'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 110,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['BldgType'] == \"1Fam\"]['SalePrice'],\n",
-    "                train_df[train_df['BldgType'] == \"2fmCon\"]['SalePrice'],\n",
-    "                train_df[train_df['BldgType'] == \"Duplex\"]['SalePrice'],\n",
-    "                train_df[train_df['BldgType'] == \"TwnhsE\"]['SalePrice'],\n",
-    "                train_df[train_df['BldgType'] == \"Twnhs\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['BldgType'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**RoofStyle**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 113,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Gable\n",
-      "Hip\n",
-      "Gambrel\n",
-      "Mansard\n",
-      "Flat\n",
-      "Shed\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['RoofStyle'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 114,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['RoofStyle'] == \"Gable\"]['SalePrice'],\n",
-    "                train_df[train_df['RoofStyle'] == \"Hip\"]['SalePrice'],\n",
-    "                train_df[train_df['RoofStyle'] == \"Gambrel\"]['SalePrice'],\n",
-    "                train_df[train_df['RoofStyle'] == \"Mansard\"]['SalePrice'],\n",
-    "                train_df[train_df['RoofStyle'] == \"Flat\"]['SalePrice'],\n",
-    "                train_df[train_df['RoofStyle'] == \"Shed\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['RoofStyle'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**MasVnrType**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 116,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "BrkFace\n",
-      "None\n",
-      "Stone\n",
-      "BrkCmn\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['MasVnrType'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 117,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['MasVnrType'] == \"BrkFace\"]['SalePrice'],\n",
-    "                train_df[train_df['MasVnrType'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['MasVnrType'] == \"Stone\"]['SalePrice'],\n",
-    "                train_df[train_df['MasVnrType'] == \"BrkCmn\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['MasVnrType'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**ExterQual**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 120,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Gd\n",
-      "TA\n",
-      "Ex\n",
-      "Fa\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['ExterQual'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 121,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['ExterQual'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['ExterQual'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['ExterQual'] == \"Ex\"]['SalePrice'],\n",
-    "                train_df[train_df['ExterQual'] == \"Fa\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['ExterQual'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**ExterCond**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 124,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "TA\n",
-      "Gd\n",
-      "Fa\n",
-      "Po\n",
-      "Ex\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['ExterCond'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 125,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['ExterCond'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['ExterCond'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['ExterCond'] == \"Fa\"]['SalePrice'],\n",
-    "                train_df[train_df['ExterCond'] == \"Po\"]['SalePrice'],\n",
-    "                train_df[train_df['ExterCond'] == \"Ex\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['ExterCond'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Foundation**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 127,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "PConc\n",
-      "CBlock\n",
-      "BrkTil\n",
-      "Wood\n",
-      "Slab\n",
-      "Stone\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['Foundation'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 128,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['Foundation'] == \"PConc\"]['SalePrice'],\n",
-    "                train_df[train_df['Foundation'] == \"CBlock\"]['SalePrice'],\n",
-    "                train_df[train_df['Foundation'] == \"BrkTil\"]['SalePrice'],\n",
-    "                train_df[train_df['Foundation'] == \"Wood\"]['SalePrice'],\n",
-    "                train_df[train_df['Foundation'] == \"Slab\"]['SalePrice'],\n",
-    "                train_df[train_df['Foundation'] == \"Stone\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['Foundation'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**BsmtQual**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 130,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Gd\n",
-      "TA\n",
-      "Ex\n",
-      "None\n",
-      "Fa\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['BsmtQual'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 131,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['BsmtQual'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtQual'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtQual'] == \"Ex\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtQual'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtQual'] == \"Fa\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['BsmtQual'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**BsmtCond**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 133,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "TA\n",
-      "Gd\n",
-      "None\n",
-      "Fa\n",
-      "Po\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['BsmtCond'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 134,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['BsmtCond'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtCond'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtCond'] == \"Po\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtCond'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtCond'] == \"Fa\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['BsmtCond'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**BsmtExposure**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 136,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "No\n",
-      "Gd\n",
-      "Mn\n",
-      "Av\n",
-      "None\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['BsmtExposure'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 137,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['BsmtExposure'] == \"No\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtExposure'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtExposure'] == \"Mn\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtExposure'] == \"Av\"]['SalePrice'],\n",
-    "                train_df[train_df['BsmtExposure'] == \"None\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['BsmtExposure'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Heating**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 139,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "GasA\n",
-      "GasW\n",
-      "Grav\n",
-      "Wall\n",
-      "OthW\n",
-      "Floor\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['Heating'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 143,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['Heating'] == \"GasA\"]['SalePrice'],\n",
-    "                train_df[train_df['Heating'] == \"GasW\"]['SalePrice'],\n",
-    "                train_df[train_df['Heating'] == \"Grav\"]['SalePrice'],\n",
-    "                train_df[train_df['Heating'] == \"Wall\"]['SalePrice'],\n",
-    "                train_df[train_df['Heating'] == \"OthW\"]['SalePrice'],\n",
-    "                train_df[train_df['Heating'] == \"Floor\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['Heating'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**HeatingQC**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 146,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Ex\n",
-      "Gd\n",
-      "TA\n",
-      "Fa\n",
-      "Po\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['HeatingQC'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 147,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['HeatingQC'] == \"Ex\"]['SalePrice'],\n",
-    "                train_df[train_df['HeatingQC'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['HeatingQC'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['HeatingQC'] == \"Fa\"]['SalePrice'],\n",
-    "                train_df[train_df['HeatingQC'] == \"Po\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['HeatingQC'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**CentralAir**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 150,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Y\n",
-      "N\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['CentralAir'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 151,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['CentralAir'] == \"Y\"]['SalePrice'],\n",
-    "                train_df[train_df['CentralAir'] == \"N\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['CentralAir'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Electrical**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 153,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "SBrkr\n",
-      "FuseF\n",
-      "FuseA\n",
-      "FuseP\n",
-      "Mix\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['Electrical'].unique():\n",
-    "    print(value)"
+    "To do so, first we will make a dataframe containing only categorical variables and SalePrice."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 154,
    "metadata": {},
-   "outputs": [],
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>index</th>\n",
+       "      <th>MSZoning</th>\n",
+       "      <th>Street</th>\n",
+       "      <th>Alley</th>\n",
+       "      <th>LotShape</th>\n",
+       "      <th>LandContour</th>\n",
+       "      <th>Utilities</th>\n",
+       "      <th>LotConfig</th>\n",
+       "      <th>LandSlope</th>\n",
+       "      <th>Neighborhood</th>\n",
+       "      <th>...</th>\n",
+       "      <th>GarageFinish</th>\n",
+       "      <th>GarageQual</th>\n",
+       "      <th>GarageCond</th>\n",
+       "      <th>PavedDrive</th>\n",
+       "      <th>PoolQC</th>\n",
+       "      <th>Fence</th>\n",
+       "      <th>MiscFeature</th>\n",
+       "      <th>SaleType</th>\n",
+       "      <th>SaleCondition</th>\n",
+       "      <th>SalePrice</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>None</td>\n",
+       "      <td>Reg</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>Inside</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>CollgCr</td>\n",
+       "      <td>...</td>\n",
+       "      <td>RFn</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>Y</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>WD</td>\n",
+       "      <td>Normal</td>\n",
+       "      <td>208500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>None</td>\n",
+       "      <td>Reg</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>FR2</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>Veenker</td>\n",
+       "      <td>...</td>\n",
+       "      <td>RFn</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>Y</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>WD</td>\n",
+       "      <td>Normal</td>\n",
+       "      <td>181500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>None</td>\n",
+       "      <td>IR1</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>Inside</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>CollgCr</td>\n",
+       "      <td>...</td>\n",
+       "      <td>RFn</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>Y</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>WD</td>\n",
+       "      <td>Normal</td>\n",
+       "      <td>223500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3</td>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>None</td>\n",
+       "      <td>IR1</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>Corner</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>Crawfor</td>\n",
+       "      <td>...</td>\n",
+       "      <td>Unf</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>Y</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>WD</td>\n",
+       "      <td>Abnorml</td>\n",
+       "      <td>140000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>4</td>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>None</td>\n",
+       "      <td>IR1</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>FR2</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>NoRidge</td>\n",
+       "      <td>...</td>\n",
+       "      <td>RFn</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>TA</td>\n",
+       "      <td>Y</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>WD</td>\n",
+       "      <td>Normal</td>\n",
+       "      <td>250000</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 46 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   index MSZoning Street Alley LotShape LandContour Utilities LotConfig  \\\n",
+       "0      0       RL   Pave  None      Reg         Lvl    AllPub    Inside   \n",
+       "1      1       RL   Pave  None      Reg         Lvl    AllPub       FR2   \n",
+       "2      2       RL   Pave  None      IR1         Lvl    AllPub    Inside   \n",
+       "3      3       RL   Pave  None      IR1         Lvl    AllPub    Corner   \n",
+       "4      4       RL   Pave  None      IR1         Lvl    AllPub       FR2   \n",
+       "\n",
+       "  LandSlope Neighborhood    ...    GarageFinish GarageQual GarageCond  \\\n",
+       "0       Gtl      CollgCr    ...             RFn         TA         TA   \n",
+       "1       Gtl      Veenker    ...             RFn         TA         TA   \n",
+       "2       Gtl      CollgCr    ...             RFn         TA         TA   \n",
+       "3       Gtl      Crawfor    ...             Unf         TA         TA   \n",
+       "4       Gtl      NoRidge    ...             RFn         TA         TA   \n",
+       "\n",
+       "  PavedDrive PoolQC Fence MiscFeature SaleType SaleCondition SalePrice  \n",
+       "0          Y   None  None        None       WD        Normal    208500  \n",
+       "1          Y   None  None        None       WD        Normal    181500  \n",
+       "2          Y   None  None        None       WD        Normal    223500  \n",
+       "3          Y   None  None        None       WD       Abnorml    140000  \n",
+       "4          Y   None  None        None       WD        Normal    250000  \n",
+       "\n",
+       "[5 rows x 46 columns]"
+      ]
+     },
+     "execution_count": 154,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
    "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['Electrical'] == \"SBrkr\"]['SalePrice'],\n",
-    "                train_df[train_df['Electrical'] == \"FuseF\"]['SalePrice'],\n",
-    "                train_df[train_df['Electrical'] == \"FuseA\"]['SalePrice'],\n",
-    "                train_df[train_df['Electrical'] == \"FuseP\"]['SalePrice'],\n",
-    "                train_df[train_df['Electrical'] == \"Mix\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['Electrical'] = {'F':F, 'p':p}"
+    "# Selecting categorical variables\n",
+    "categoricals = train_df.select_dtypes(exclude=['number'])\n",
+    "categoricals = categoricals.assign(SalePrice=train_df['SalePrice'].values)\n",
+    "categoricals.reset_index(inplace=True)\n",
+    "categoricals.head()"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "**KitchenQual**"
+    "For now we will work with variables that can easily be encoded for Point-Biserial Correlation, that is that have only 2 possible outcomes."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 156,
+   "execution_count": 140,
    "metadata": {},
    "outputs": [
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Gd\n",
-      "TA\n",
-      "Ex\n",
-      "Fa\n"
+      "Variables with only 2 possible outcomes:\n",
+      "List of values for Street\n",
+      "Pave\n",
+      "Grvl\n",
+      "List of values for Utilities\n",
+      "AllPub\n",
+      "NoSeWa\n",
+      "List of values for CentralAir\n",
+      "Y\n",
+      "N\n"
      ]
     }
    ],
    "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['KitchenQual'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 157,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['KitchenQual'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['KitchenQual'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['KitchenQual'] == \"Ex\"]['SalePrice'],\n",
-    "                train_df[train_df['KitchenQual'] == \"Fa\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['KitchenQual'] = {'F':F, 'p':p}"
+    "print(\"Variables with only 2 possible outcomes:\")\n",
+    "for column in train_df.select_dtypes(exclude=['number']).columns:\n",
+    "    if len(train_df[column].unique()) == 2:\n",
+    "        print(\"List of values for \" + column)\n",
+    "        for index, value in train_df[column].value_counts().iteritems():\n",
+    "            print(index)"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "**FireplaceQu**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 162,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "None\n",
-      "TA\n",
-      "Gd\n",
-      "Fa\n",
-      "Ex\n",
-      "Po\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['FireplaceQu'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 163,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['FireplaceQu'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['FireplaceQu'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['FireplaceQu'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['FireplaceQu'] == \"Fa\"]['SalePrice'],\n",
-    "                train_df[train_df['FireplaceQu'] == \"Ex\"]['SalePrice'],\n",
-    "                train_df[train_df['FireplaceQu'] == \"Po\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['FireplaceQu'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**GarageFinish**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 164,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "RFn\n",
-      "Unf\n",
-      "Fin\n",
-      "None\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['GarageFinish'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 165,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['GarageFinish'] == \"RFn\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageFinish'] == \"Unf\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageFinish'] == \"Fin\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageFinish'] == \"None\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['GarageFinish'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**GarageQual**"
+    "We only have three variables with 2 levels. We can proceed and encode them and see how they are correlated with SalePrice."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 167,
    "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "TA\n",
-      "Fa\n",
-      "Gd\n",
-      "None\n",
-      "Po\n",
-      "Ex\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['GarageQual'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 168,
-   "metadata": {},
    "outputs": [],
    "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['GarageQual'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageQual'] == \"Fa\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageQual'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageQual'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageQual'] == \"Po\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageQual'] == \"Ex\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['GarageQual'] = {'F':F, 'p':p}"
+    "train_df['enc_street'] = pd.get_dummies(train_df['Street'], drop_first=True)\n",
+    "train_df['enc_utilities'] = pd.get_dummies(train_df['Utilities'], drop_first=True)\n",
+    "train_df['enc_centralair'] = pd.get_dummies(train_df['CentralAir'], drop_first=True)"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "**GarageCond**"
+    "Let's check the correlation coefficients using Spearman's method."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 170,
+   "execution_count": 172,
    "metadata": {},
    "outputs": [
     {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "TA\n",
-      "Fa\n",
-      "None\n",
-      "Gd\n",
-      "Po\n",
-      "Ex\n"
-     ]
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>enc_street</th>\n",
+       "      <th>enc_utilities</th>\n",
+       "      <th>enc_centralair</th>\n",
+       "      <th>SalePrice</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>enc_street</th>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>0.001706</td>\n",
+       "      <td>0.069659</td>\n",
+       "      <td>0.045446</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>enc_utilities</th>\n",
+       "      <td>0.001706</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>0.007011</td>\n",
+       "      <td>-0.016410</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>enc_centralair</th>\n",
+       "      <td>0.069659</td>\n",
+       "      <td>0.007011</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>0.313797</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>SalePrice</th>\n",
+       "      <td>0.045446</td>\n",
+       "      <td>-0.016410</td>\n",
+       "      <td>0.313797</td>\n",
+       "      <td>1.000000</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                enc_street  enc_utilities  enc_centralair  SalePrice\n",
+       "enc_street        1.000000       0.001706        0.069659   0.045446\n",
+       "enc_utilities     0.001706       1.000000        0.007011  -0.016410\n",
+       "enc_centralair    0.069659       0.007011        1.000000   0.313797\n",
+       "SalePrice         0.045446      -0.016410        0.313797   1.000000"
+      ]
+     },
+     "execution_count": 172,
+     "metadata": {},
+     "output_type": "execute_result"
     }
    ],
    "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['GarageCond'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 171,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['GarageCond'] == \"TA\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageCond'] == \"Fa\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageCond'] == \"Gd\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageCond'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageCond'] == \"Po\"]['SalePrice'],\n",
-    "                train_df[train_df['GarageCond'] == \"Ex\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['GarageCond'] = {'F':F, 'p':p}"
+    "train_df[['enc_street', 'enc_utilities', 'enc_centralair', 'SalePrice']].corr(method='spearman')"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "**PavedDrive**"
+    "As for **enc_street** and **enc_utilities**, they're weakly correlated to SalePrice. **enc_centralair** also seems to have little correlation with SalePrice. Nevertheless we'll keep it as one our final features."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 173,
    "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Y\n",
-      "N\n",
-      "P\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['PavedDrive'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 174,
-   "metadata": {},
    "outputs": [],
    "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['PavedDrive'] == \"Y\"]['SalePrice'],\n",
-    "                train_df[train_df['PavedDrive'] == \"N\"]['SalePrice'],\n",
-    "                train_df[train_df['PavedDrive'] == \"P\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['PavedDrive'] = {'F':F, 'p':p}"
+    "final_features.append('enc_centralair')"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "**PoolQC**"
+    "# **FEATURE ENGINEERING AND SELECTION**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now that we have explored the trends and relationships within the data, we can work on engineering a set of features for our models. We can use the results of the EDA to inform this feature engineering, keeping in mind that most of the engineering has already been done in that phase.\n",
+    "\n",
+    "In the EDA, we had a variable **final_features** where we stored the names of a few features that had significant effect on SalePrice."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 174,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['OverallQual', 'GrLivArea', 'GarageCars', 'HouseAge', 'enc_centralair']"
+      ]
+     },
+     "execution_count": 174,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "final_features"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We also left out some variables with decent correlation with SalePrice.\n",
+    "Let's check again the top correlations."
    ]
   },
   {
@@ -4466,20 +3598,40 @@
    "metadata": {},
    "outputs": [
     {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "None\n",
-      "Ex\n",
-      "Fa\n",
-      "Gd\n"
-     ]
+     "data": {
+      "text/plain": [
+       "SalePrice       1.000000\n",
+       "OverallQual     0.804704\n",
+       "GrLivArea       0.724647\n",
+       "GarageCars      0.682405\n",
+       "YearBuilt       0.651286\n",
+       "GarageArea      0.641203\n",
+       "FullBath        0.628864\n",
+       "TotalBsmtSF     0.594319\n",
+       "YearRemodAdd    0.567541\n",
+       "1stFlrSF        0.566580\n",
+       "TotRmsAbvGrd    0.522695\n",
+       "Fireplaces      0.512945\n",
+       "OpenPorchSF     0.470797\n",
+       "LotArea         0.446456\n",
+       "LotFrontage     0.422850\n",
+       "Name: SalePrice, dtype: float64"
+      ]
+     },
+     "execution_count": 176,
+     "metadata": {},
+     "output_type": "execute_result"
     }
    ],
    "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['PoolQC'].unique():\n",
-    "    print(value)"
+    "sp_corr.head(15)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can go ahead and add the variables that weren't previously selected to **final_features**."
    ]
   },
   {
@@ -4488,271 +3640,546 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['PoolQC'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['PoolQC'] == \"Ex\"]['SalePrice'],\n",
-    "                train_df[train_df['PoolQC'] == \"Fa\"]['SalePrice'],\n",
-    "                train_df[train_df['PoolQC'] == \"Gd\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['PoolQC'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Fence**"
+    "final_features.append('FullBath')\n",
+    "final_features.append('TotalBsmtSF')\n",
+    "final_features.append('YearRemodAdd')\n",
+    "final_features.append('1stFlrSF')\n",
+    "final_features.append('TotRmsAbvGrd')\n",
+    "final_features.append('Fireplaces')\n",
+    "final_features.append('OpenPorchSF')\n",
+    "final_features.append('LotArea')\n",
+    "final_features.append('LotFrontage')\n",
+    "final_features.append('SalePrice')"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 179,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "None\n",
-      "MnPrv\n",
-      "GdWo\n",
-      "GdPrv\n",
-      "MnWw\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['Fence'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 180,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['Fence'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['Fence'] == \"MnPrv\"]['SalePrice'],\n",
-    "                train_df[train_df['Fence'] == \"GdWo\"]['SalePrice'],\n",
-    "                train_df[train_df['Fence'] == \"GdPrv\"]['SalePrice'],\n",
-    "                train_df[train_df['Fence'] == \"MnWw\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['Fence'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**MiscFeature**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 182,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "None\n",
-      "Shed\n",
-      "Gar2\n",
-      "Othr\n",
-      "TenC\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['MiscFeature'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 183,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['MiscFeature'] == \"None\"]['SalePrice'],\n",
-    "                train_df[train_df['MiscFeature'] == \"Shed\"]['SalePrice'],\n",
-    "                train_df[train_df['MiscFeature'] == \"Gar2\"]['SalePrice'],\n",
-    "                train_df[train_df['MiscFeature'] == \"Othr\"]['SalePrice'],\n",
-    "                train_df[train_df['MiscFeature'] == \"TenC\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['MiscFeature'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**SaleCondition**"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 185,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Normal\n",
-      "Abnorml\n",
-      "Partial\n",
-      "AdjLand\n",
-      "Alloca\n",
-      "Family\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Listing all possible outcomes\n",
-    "for value in train_df['SaleCondition'].unique():\n",
-    "    print(value)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 186,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Performing ANOVA test using scipy.stats.f_oneway\n",
-    "F, p = f_oneway(train_df[train_df['SaleCondition'] == \"Normal\"]['SalePrice'],\n",
-    "                train_df[train_df['SaleCondition'] == \"Abnorml\"]['SalePrice'],\n",
-    "                train_df[train_df['SaleCondition'] == \"Partial\"]['SalePrice'],\n",
-    "                train_df[train_df['SaleCondition'] == \"AdjLand\"]['SalePrice'],\n",
-    "                train_df[train_df['SaleCondition'] == \"Alloca\"]['SalePrice'],\n",
-    "                train_df[train_df['SaleCondition'] == \"Family\"]['SalePrice'])\n",
-    "\n",
-    "# Storing test results in anova_results\n",
-    "anova_results['SaleCondition'] = {'F':F, 'p':p}"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "Now let's take a look at the results."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 188,
+   "execution_count": 187,
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "{'MSZoning': {'F': 53.80137615860899, 'p': 2.725475333682133e-42},\n",
-       " 'Street': {'F': 2.7010101383383804, 'p': 0.10050344625843534},\n",
-       " 'Alley': {'F': 16.82144581885382, 'p': 6.009000522297279e-08},\n",
-       " 'LotShape': {'F': 41.22377768780211, 'p': 1.4916478112738706e-25},\n",
-       " 'LandContour': {'F': 14.669266300097055, 'p': 2.0622589368849943e-09},\n",
-       " 'Utilities': {'F': 0.31975546357994256, 'p': 0.5718429152991329},\n",
-       " 'LotConfig': {'F': 6.6310832907326285, 'p': 2.7524714192928094e-05},\n",
-       " 'LandSlope': {'F': 2.352939402236596, 'p': 0.0954557560973795},\n",
-       " 'BldgType': {'F': 14.165597151343983, 'p': 2.420316368918638e-11},\n",
-       " 'RoofStyle': {'F': 12.769683798624884, 'p': 3.638986760824022e-12},\n",
-       " 'MasVnrType': {'F': 112.75843149747433, 'p': 1.4670946059277903e-65},\n",
-       " 'ExterQual': {'F': 424.5627860122613, 'p': 2.2579382180112206e-197},\n",
-       " 'ExterCond': {'F': 10.800479937451263, 'p': 1.2565337470985494e-08},\n",
-       " 'Foundation': {'F': 112.12327848418137, 'p': 3.9207616835180384e-100},\n",
-       " 'BsmtQual': {'F': 308.96398684478794, 'p': 9.46833167577144e-192},\n",
-       " 'BsmtCond': {'F': 22.97650318383437, 'p': 2.002614308715551e-18},\n",
-       " 'BsmtExposure': {'F': 55.01317378025475, 'p': 3.387579659835125e-43},\n",
-       " 'Heating': {'F': 4.977656069282251, 'p': 0.0001591709625459064},\n",
-       " 'HeatingQC': {'F': 94.12276352632627, 'p': 3.820455983769816e-71},\n",
-       " 'CentralAir': {'F': 114.8605052488043, 'p': 7.75919896563281e-26},\n",
-       " 'Electrical': {'F': 26.423598988567225, 'p': 3.597956835993501e-21},\n",
-       " 'KitchenQual': {'F': 380.65860949889435, 'p': 7.478456037653107e-182},\n",
-       " 'FireplaceQu': {'F': 131.29601951418883, 'p': 1.1248023100223323e-114},\n",
-       " 'GarageFinish': {'F': 240.9465992102196, 'p': 1.3371097331831577e-126},\n",
-       " 'GarageQual': {'F': 30.234059485822943, 'p': 2.6962273708655215e-29},\n",
-       " 'GarageCond': {'F': 30.124299244014903, 'p': 3.4392324673583247e-29},\n",
-       " 'PavedDrive': {'F': 47.93478411530262, 'p': 7.041149990458388e-21},\n",
-       " 'PoolQC': {'F': 0.5427867385156632, 'p': 0.6530569332229528},\n",
-       " 'Fence': {'F': 16.28592971181681, 'p': 4.713959390604235e-13},\n",
-       " 'MiscFeature': {'F': 2.740443599603358, 'p': 0.02738872704413161},\n",
-       " 'SaleCondition': {'F': 46.69462787754278, 'p': 8.268802882275347e-45}}"
+       "['OverallQual',\n",
+       " 'GrLivArea',\n",
+       " 'GarageCars',\n",
+       " 'HouseAge',\n",
+       " 'enc_centralair',\n",
+       " 'FullBath',\n",
+       " 'YearRemodAdd',\n",
+       " '1stFlrSF',\n",
+       " 'TotRmsAbvGrd',\n",
+       " 'Fireplaces',\n",
+       " 'OpenPorchSF',\n",
+       " 'LotArea',\n",
+       " 'LotFrontage',\n",
+       " 'TotalBsmtSF',\n",
+       " 'SalePrice']"
       ]
      },
-     "execution_count": 188,
+     "execution_count": 187,
      "metadata": {},
      "output_type": "execute_result"
     }
    ],
    "source": [
-    "anova_results"
+    "final_features"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 215,
    "metadata": {},
-   "outputs": [],
-   "source": []
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>OverallQual</th>\n",
+       "      <th>GrLivArea</th>\n",
+       "      <th>GarageCars</th>\n",
+       "      <th>HouseAge</th>\n",
+       "      <th>enc_centralair</th>\n",
+       "      <th>FullBath</th>\n",
+       "      <th>YearRemodAdd</th>\n",
+       "      <th>1stFlrSF</th>\n",
+       "      <th>TotRmsAbvGrd</th>\n",
+       "      <th>Fireplaces</th>\n",
+       "      <th>OpenPorchSF</th>\n",
+       "      <th>LotArea</th>\n",
+       "      <th>LotFrontage</th>\n",
+       "      <th>TotalBsmtSF</th>\n",
+       "      <th>SalePrice</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>7</td>\n",
+       "      <td>1710</td>\n",
+       "      <td>2</td>\n",
+       "      <td>5</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>2003</td>\n",
+       "      <td>856</td>\n",
+       "      <td>8</td>\n",
+       "      <td>0</td>\n",
+       "      <td>61</td>\n",
+       "      <td>8450</td>\n",
+       "      <td>65.0</td>\n",
+       "      <td>856</td>\n",
+       "      <td>208500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>6</td>\n",
+       "      <td>1262</td>\n",
+       "      <td>2</td>\n",
+       "      <td>31</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1976</td>\n",
+       "      <td>1262</td>\n",
+       "      <td>6</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>9600</td>\n",
+       "      <td>80.0</td>\n",
+       "      <td>1262</td>\n",
+       "      <td>181500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>7</td>\n",
+       "      <td>1786</td>\n",
+       "      <td>2</td>\n",
+       "      <td>7</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>920</td>\n",
+       "      <td>6</td>\n",
+       "      <td>1</td>\n",
+       "      <td>42</td>\n",
+       "      <td>11250</td>\n",
+       "      <td>68.0</td>\n",
+       "      <td>920</td>\n",
+       "      <td>223500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>7</td>\n",
+       "      <td>1717</td>\n",
+       "      <td>3</td>\n",
+       "      <td>91</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1970</td>\n",
+       "      <td>961</td>\n",
+       "      <td>7</td>\n",
+       "      <td>1</td>\n",
+       "      <td>35</td>\n",
+       "      <td>9550</td>\n",
+       "      <td>60.0</td>\n",
+       "      <td>756</td>\n",
+       "      <td>140000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>8</td>\n",
+       "      <td>2198</td>\n",
+       "      <td>3</td>\n",
+       "      <td>8</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>2000</td>\n",
+       "      <td>1145</td>\n",
+       "      <td>9</td>\n",
+       "      <td>1</td>\n",
+       "      <td>84</td>\n",
+       "      <td>14260</td>\n",
+       "      <td>84.0</td>\n",
+       "      <td>1145</td>\n",
+       "      <td>250000</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   OverallQual  GrLivArea  GarageCars  HouseAge  enc_centralair  FullBath  \\\n",
+       "0            7       1710           2         5               1         2   \n",
+       "1            6       1262           2        31               1         2   \n",
+       "2            7       1786           2         7               1         2   \n",
+       "3            7       1717           3        91               1         1   \n",
+       "4            8       2198           3         8               1         2   \n",
+       "\n",
+       "   YearRemodAdd  1stFlrSF  TotRmsAbvGrd  Fireplaces  OpenPorchSF  LotArea  \\\n",
+       "0          2003       856             8           0           61     8450   \n",
+       "1          1976      1262             6           1            0     9600   \n",
+       "2          2002       920             6           1           42    11250   \n",
+       "3          1970       961             7           1           35     9550   \n",
+       "4          2000      1145             9           1           84    14260   \n",
+       "\n",
+       "   LotFrontage  TotalBsmtSF  SalePrice  \n",
+       "0         65.0          856     208500  \n",
+       "1         80.0         1262     181500  \n",
+       "2         68.0          920     223500  \n",
+       "3         60.0          756     140000  \n",
+       "4         84.0         1145     250000  "
+      ]
+     },
+     "execution_count": 215,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train = train_df[final_features]\n",
+    "train.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## **SPLIT INTO TRAIN AND TEST SETS**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We will now proceed to split our dataset into training and testing sets."
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 217,
    "metadata": {},
    "outputs": [],
-   "source": []
+   "source": [
+    "X = train.drop('SalePrice', axis=1)\n",
+    "y = train['SalePrice']"
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 220,
    "metadata": {},
    "outputs": [],
-   "source": []
+   "source": [
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## **ESTABLISHING A BASELINE**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We need to establish a naive baseline, that is a naive guess that machine learning models will have to outperform. Otherwise, we will conclude that machine learning is not the most suited solution for this problem.\n",
+    "\n",
+    "For a regression task, a good naive baseline is to predict the median value of the target on the training set for all examples on the test set."
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 226,
    "metadata": {},
-   "outputs": [],
-   "source": []
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The baseline guess is a SalePrice of 163000.00\n"
+     ]
+    }
+   ],
+   "source": [
+    "baseline_guess = np.median(y_train)\n",
+    "print('The baseline guess is a SalePrice of %0.2f' % baseline_guess)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For our future models, we will use the MAE(Mean Absolute Error) as a metric. This metric is easy to interpret as it represents the average amount our estimate is off by in the same units as the target variable."
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 224,
    "metadata": {},
    "outputs": [],
-   "source": []
+   "source": [
+    "def mae(y_true, y_pred):\n",
+    "    return np.mean(abs(y_true - y_pred))"
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 225,
    "metadata": {},
-   "outputs": [],
-   "source": []
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Baseline Performance on the test set: MAE = 49421.1921\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Baseline Performance on the test set: MAE = %0.4f\" % mae(y_test, baseline_guess))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This tells us that our average estimate is off by 49421 which is not bad given that SalePrice varies between 34900 and 755000.\n",
+    "\n",
+    "Before we start building our models we need to scale our data. That is because the features are in different units and keeping them that way might make our models' performances drop."
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 230,
    "metadata": {},
    "outputs": [],
-   "source": []
+   "source": [
+    "scaler = MinMaxScaler(feature_range=(0, 1))\n",
+    "\n",
+    "scaler.fit(X_train)\n",
+    "\n",
+    "X_train = scaler.transform(X_train)\n",
+    "X_test = scaler.transform(X_test)\n",
+    "\n",
+    "y_train = np.array(y_train).reshape((-1, ))\n",
+    "y_test = np.array(y_test).reshape((-1, ))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## **BUILDING OUR MODELS**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The following models will be used for this regression task:\n",
+    "- LinearRegression\n",
+    "- HuberRegressor\n",
+    "- GradientBoostingRegressor\n",
+    "- DecisionTreeRegressor\n",
+    "- SVR\n",
+    "- KNeighborsRegressor"
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 234,
    "metadata": {},
    "outputs": [],
-   "source": []
+   "source": [
+    "def fit_and_evaluate(model):\n",
+    "    \n",
+    "    # Train the model\n",
+    "    model.fit(X_train, y_train)\n",
+    "    \n",
+    "    # Make predictions and evalute\n",
+    "    model_pred = model.predict(X_test)\n",
+    "    model_mae = mae(y_test, model_pred)\n",
+    "    \n",
+    "    # Return the performance metric\n",
+    "    return model_mae"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 238,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Linear Regression Performance on the test set: MAE = 21124.3411\n",
+      "Huber Regression Performance on the test set: MAE = 20066.2333\n",
+      "Support Vector Machine Regression Performance on the test set: MAE = 35524.5064\n",
+      "Decision Tree Regression Performance on the test set: MAE = 21491.2616\n",
+      "Gradient Boosted Regression Performance on the test set: MAE = 15671.4222\n",
+      "K-Nearest Neighbors Regression Performance on the test set: MAE = 19375.7231\n"
+     ]
+    }
+   ],
+   "source": [
+    "lr = LinearRegression()\n",
+    "lr_mae = fit_and_evaluate(lr)\n",
+    "\n",
+    "print('Linear Regression Performance on the test set: MAE = %0.4f' % lr_mae)\n",
+    "\n",
+    "hr = HuberRegressor()\n",
+    "hr_mae = fit_and_evaluate(hr)\n",
+    "\n",
+    "print('Huber Regression Performance on the test set: MAE = %0.4f' % hr_mae)\n",
+    "\n",
+    "svm = SVR(C = 1000, gamma = 0.1)\n",
+    "svm_mae = fit_and_evaluate(svm)\n",
+    "\n",
+    "print('Support Vector Machine Regression Performance on the test set: MAE = %0.4f' % svm_mae)\n",
+    "\n",
+    "decision_tree = DecisionTreeRegressor()\n",
+    "decision_tree_mae = fit_and_evaluate(decision_tree)\n",
+    "\n",
+    "print('Decision Tree Regression Performance on the test set: MAE = %0.4f' % decision_tree_mae)\n",
+    "\n",
+    "gradient_boosted = GradientBoostingRegressor(random_state=60)\n",
+    "gradient_boosted_mae = fit_and_evaluate(gradient_boosted)\n",
+    "\n",
+    "print('Gradient Boosted Regression Performance on the test set: MAE = %0.4f' % gradient_boosted_mae)\n",
+    "\n",
+    "knn = KNeighborsRegressor(n_neighbors=10)\n",
+    "knn_mae = fit_and_evaluate(knn)\n",
+    "\n",
+    "print('K-Nearest Neighbors Regression Performance on the test set: MAE = %0.4f' % knn_mae)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let's make a plot to visualize the different performances."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 248,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Text(0.5, 1.0, 'Model Comparison on Test MAE')"
+      ]
+     },
+     "execution_count": 248,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<Figure size 1080x720 with 0 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "plt.figure(figsize=(15,10))\n",
+    "model_comparison = pd.DataFrame({'model': ['Linear Regression', 'Huber Regression', 'Support Vector Machine',\n",
+    "                                           'Decision Trees', 'Gradient Boosted',\n",
+    "                                            'K-Nearest Neighbors'],\n",
+    "                                 'mae': [lr_mae, hr_mae, svm_mae, decision_tree_mae, \n",
+    "                                         gradient_boosted_mae, knn_mae]})\n",
+    "\n",
+    "# Horizontal bar chart of test mae\n",
+    "model_comparison.plot(x = 'model', y = 'mae', kind = 'barh', color = 'red', edgecolor = 'black')\n",
+    "\n",
+    "# Plot formatting\n",
+    "plt.ylabel('')\n",
+    "plt.yticks(size = 14)\n",
+    "plt.xlabel('Mean Absolute Error')\n",
+    "plt.xticks(size = 14)\n",
+    "plt.title('Model Comparison on Test MAE', size = 20)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We note that Gradient Boosted has the smallest Mean Absolute Error. Let's see what the percentage of accuracy is for this model."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 261,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "gradient_boosted.fit(X_train, y_train)\n",
+    "\n",
+    "predictions = gradient_boosted.predict(X_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 265,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.8941722796758984"
+      ]
+     },
+     "execution_count": 265,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "gradient_boosted.score(X_test, y_test)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Gradient Boosted Regression seems to perform very well with the given features. We may be able to increase the score but that could introduce overfitting."
+   ]
   },
   {
    "cell_type": "code",
